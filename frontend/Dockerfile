@@ -2,7 +2,7 @@
 # 第一阶段：构建环境 (Builder Stage)
 # 作用：使用 Node.js 环境来安装依赖并编译前端代码
 # ==============================================================================
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 
 # 1. 优先复制依赖定义文件
@@ -11,10 +11,11 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # 2. 安装依赖
-# npm install -g pnpm: 全局安装 pnpm 包管理器
+# npm install -g pnpm@10.26.2: 全局安装与 packageManager 字段一致的 pnpm 版本，
+#   避免 pnpm 触发版本切换去下载 @pnpm/exe 原生二进制（Alpine/musl 无对应二进制会报错）。
+# 基础镜像已从 alpine 改为 bookworm-slim（glibc），确保 pnpm 原生二进制可用。
 # pnpm install: 安装所有依赖（包括 devDependencies，构建需要 TypeScript、Vite 等）
-# 注意：不使用 --prod 标志，因为构建阶段需要完整的开发环境
-RUN npm install -g pnpm && pnpm install
+RUN npm install -g pnpm@10.26.2 && pnpm install
 
 # 3. 复制源代码并构建
 COPY . .

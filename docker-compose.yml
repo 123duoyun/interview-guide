@@ -70,7 +70,8 @@ services:
   #     - 9001: 控制台端口，浏览器访问此端口管理文件
   # =========================================
   minio:
-    image: minio/minio
+    # Chainguard 镜像：Docker Hub minio/minio 已 404，quay.io 旧仓库已关闭匿名拉取
+    image: cgr.dev/chainguard/minio:latest
     container_name: interview-minio
     # 启动命令：指定数据目录和控制台地址
     command: server /data --console-address ":9001"
@@ -82,11 +83,8 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+    # 注意：Chainguard 镜像是 distroless，无 curl，不设 healthcheck；
+    # 由 createbuckets 的 until 重试循环等待 MinIO 就绪
 
   # =========================================
   # 4. MinIO 初始化任务 (Init Container Pattern)
@@ -100,14 +98,17 @@ services:
   #   - 解决了"谁来创建 Bucket"的问题，实现了基础设施的自动化配置，无需手动操作。
   # =========================================
   createbuckets:
-    image: minio/mc
+    # latest-dev 变体自带 /bin/sh；普通 latest 是 distroless，无法运行 entrypoint 脚本
+    image: cgr.dev/chainguard/minio-client:latest-dev
     depends_on:
       minio:
-        condition: service_healthy # 必须等待 MinIO 服务健康（不仅仅是启动）
+        condition: service_started
     entrypoint: >
       /bin/sh -c "
       set -eu;
-      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin &&
+      until /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin; do
+        echo 'waiting for minio to be ready...'; sleep 2;
+      done;
       (
         /usr/bin/mc ls myminio/interview-guide > /dev/null 2>&1 ||
         /usr/bin/mc mb myminio/interview-guide
@@ -135,7 +136,7 @@ services:
       redis:
         condition: service_healthy
       minio:
-        condition: service_healthy
+        condition: service_started
       createbuckets:
         condition: service_completed_successfully # 等待初始化任务完成
     environment:
