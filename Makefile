@@ -12,7 +12,8 @@ FRONTEND_IMAGE_NAME = $(REGISTRY)/$(NAMESPACE)/$(FRONTEND_IMAGE):$(TAG)
 APP_IMAGE_NAME = $(REGISTRY)/$(NAMESPACE)/$(APP_IMAGE):$(TAG)
 
 .PHONY: docker-login docker-build-frontend docker-build-app docker-build-all \
-        docker-push-frontend docker-push-app docker-push-all up down
+        docker-push-frontend docker-push-app docker-push-all \
+        docker-pull-frontend docker-pull-app docker-pull-all up down
 
 docker-login:
 	@echo "正在登录到 Docker 镜像仓库..."
@@ -39,6 +40,14 @@ docker-push-app: docker-build-app
 	docker push $(REGISTRY)/$(NAMESPACE)/$(APP_IMAGE):latest
 
 docker-push-all: docker-push-frontend docker-push-app
+
+docker-pull-frontend:
+	docker pull $(FRONTEND_IMAGE_NAME)
+
+docker-pull-app:
+	docker pull $(APP_IMAGE_NAME)
+
+docker-pull-all: docker-pull-frontend docker-pull-app
 
 up: docker-build-all
 	docker compose up -d
