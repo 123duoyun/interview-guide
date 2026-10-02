@@ -126,9 +126,6 @@ services:
   # =========================================
   app:
     image: crpi-jr4becmh09ijs655.cn-shanghai.personal.cr.aliyuncs.com/lyw1/interview-app:${TAG:-latest}
-    build:
-      context: .
-      dockerfile: app/Dockerfile
     container_name: interview-app
     # 依赖管理：确保基础设施准备好后再启动后端
     depends_on:
@@ -182,7 +179,6 @@ services:
   # =========================================
   frontend:
     image: crpi-jr4becmh09ijs655.cn-shanghai.personal.cr.aliyuncs.com/lyw1/interview-frontend:${TAG:-latest}
-    build: ./frontend
     container_name: interview-frontend
     depends_on:
       - app
