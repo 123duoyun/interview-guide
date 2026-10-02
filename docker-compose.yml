@@ -125,6 +125,7 @@ services:
   #   - 处理核心业务逻辑（简历分析、模拟面试、RAG）
   # =========================================
   app:
+    image: crpi-jr4becmh09ijs655.cn-shanghai.personal.cr.aliyuncs.com/lyw/interview-app:${TAG:-latest}
     build:
       context: .
       dockerfile: app/Dockerfile
@@ -180,6 +181,7 @@ services:
   #   - 反向代理 API 请求（通常在 Nginx 配置中处理）
   # =========================================
   frontend:
+    image: crpi-jr4becmh09ijs655.cn-shanghai.personal.cr.aliyuncs.com/lyw/interview-frontend:${TAG:-latest}
     build: ./frontend
     container_name: interview-frontend
     depends_on:
